@@ -31,23 +31,26 @@ func main() {
 			continue
 		}
 
-		handleClient(conn)
+		go handleClient(conn)
 	}
 }
 
 func handleClient(conn net.Conn) {
 	defer conn.Close()
 
-	buf := make([]byte, 1024)
+	for {
 
-	_, err := conn.Read(buf)
-	if err != nil {
-		return
+		buf := make([]byte, 1024)
+
+		_, err := conn.Read(buf)
+		if err != nil {
+			return
+		}
+
+		// fmt.Println("Received Data:", string(buf[:n]))
+
+		// // return back the same data
+		// conn.Write(buf[:n])
+		conn.Write([]byte("+PONG\r\n"))
 	}
-
-	// fmt.Println("Received Data:", string(buf[:n]))
-
-	// // return back the same data
-	// conn.Write(buf[:n])
-	conn.Write([]byte("+PONG\r\n"))
 }
