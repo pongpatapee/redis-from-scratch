@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"strconv"
+	"strings"
 )
 
 // Ensures gofmt doesn't remove the "net" and "os" imports in stage 1 (feel free to remove this!)
@@ -31,26 +34,85 @@ func main() {
 			continue
 		}
 
-		go handleClient(conn)
+		go handleRequest(conn)
 	}
 }
 
-func handleClient(conn net.Conn) {
+func handleRequest(conn net.Conn) {
 	defer conn.Close()
+
+	fmt.Println("Starting connection!")
 
 	for {
 
 		buf := make([]byte, 1024)
 
-		_, err := conn.Read(buf)
-		if err != nil {
+		length, err := conn.Read(buf)
+		if err == io.EOF {
+			return
+		} else if err != nil {
+			fmt.Println("Error while trying to read from connection", err.Error())
 			return
 		}
 
-		// fmt.Println("Received Data:", string(buf[:n]))
+		commandData := string(buf[:length])
+		fmt.Println("Command Data")
+		fmt.Println(commandData)
+		args, _, err := parseCommand(commandData)
+		if err != nil {
+			fmt.Println("Error while trying to parse command")
+			return
+		}
 
-		// // return back the same data
-		// conn.Write(buf[:n])
-		conn.Write([]byte("+PONG\r\n"))
+		command := args[0]
+
+		switch command {
+		case "ECHO":
+			fmt.Println("processing echo command")
+			if len(args) != 2 {
+				conn.Write([]byte("-ERR wrong number of arguments for 'echo' command"))
+				return
+			}
+
+			reply := fmt.Sprintf("+%v\r\n", args[1])
+
+			conn.Write([]byte(reply))
+		case "PING":
+			conn.Write([]byte("+PONG\r\n"))
+		default:
+			conn.Write([]byte("-ERR unknown command\r\n"))
+			// return
+		}
+
+		// fmt.Println("Parsed args")
+		// fmt.Println(args, len(args))
+		// fmt.Println("Parsed length")
+		// fmt.Println(argLengths, len(argLengths))
+
 	}
+}
+
+func parseCommand(commandData string) ([]string, []int, error) {
+	metadata := strings.Split(commandData, "\r\n")
+
+	numArgs, err := strconv.Atoi(metadata[0][1:])
+	if err != nil {
+		fmt.Println("Error extracting num args")
+		return nil, nil, err
+	}
+
+	args := make([]string, numArgs)
+	argLengths := make([]int, numArgs)
+	idx := 1
+	for i := range numArgs {
+		argLength, _ := strconv.Atoi(metadata[idx][1:])
+		argLengths[i] = argLength
+		args[i] = metadata[idx+1]
+		idx += 2
+	}
+
+	// make command case-insensitive
+	args[0] = strings.ToUpper(args[0])
+
+	return args, argLengths, nil
 }
