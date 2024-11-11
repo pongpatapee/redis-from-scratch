@@ -76,7 +76,7 @@ func SetHandler(conn net.Conn, args []string) {
 
 	key := args[0]
 	value := args[1]
-	State[key] = value
+	StringStore[key] = value
 	conn.Write([]byte("+OK\r\n"))
 }
 
@@ -88,7 +88,7 @@ func GetHandler(conn net.Conn, args []string) {
 
 	key := args[0]
 
-	val, exist := State[key]
+	val, exist := StringStore[key]
 	if !exist {
 		conn.Write([]byte("$-1\r\n"))
 		return

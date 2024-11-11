@@ -1,4 +1,4 @@
 package main
 
-// var State = make(map[string]interface{})
-var State = make(map[string]string)
+// var StringStore = make(map[string]interface{})
+var StringStore = make(map[string]string)
