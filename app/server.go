@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -47,8 +48,6 @@ func handleRequest(conn net.Conn) {
 		}
 
 		commandData := string(buf[:length])
-		// fmt.Println("Command Data")
-		// fmt.Println(commandData)
 		args, _, err := ParseCommand(commandData)
 		if err != nil {
 			fmt.Println("Error while trying to parse command")
@@ -56,7 +55,7 @@ func handleRequest(conn net.Conn) {
 		}
 
 		command := args[0]
-		fmt.Println("Hanlding command", command)
+		fmt.Println("Hanlding command", strings.ToUpper(command))
 
 		handler, ok := CommandHanlders[command]
 		if ok {

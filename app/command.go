@@ -12,7 +12,7 @@ var CommandHanlders = map[string]func(net.Conn, []string){
 	"PING": PingHanlder,
 	"ECHO": EchoHandler,
 	"SET":  SetHandler,
-	"Get":  GetHandler,
+	"GET":  GetHandler,
 }
 
 func ParseCommand(commandData string) ([]string, []int, error) {
@@ -69,7 +69,31 @@ func EchoHandler(conn net.Conn, args []string) {
 }
 
 func SetHandler(conn net.Conn, args []string) {
+	if len(args) != 2 {
+		conn.Write([]byte("-ERR syntax error\r\n"))
+		return
+	}
+
+	key := args[0]
+	value := args[1]
+	State[key] = value
+	conn.Write([]byte("+OK\r\n"))
 }
 
 func GetHandler(conn net.Conn, args []string) {
+	if len(args) != 1 {
+		conn.Write([]byte("-ERR wrong number of arguments for 'get' command\r\n"))
+		return
+	}
+
+	key := args[0]
+
+	val, exist := State[key]
+	if !exist {
+		conn.Write([]byte("$-1\r\n"))
+		return
+	}
+
+	reply := fmt.Sprintf("$%v\r\n%v\r\n", len(string(val)), val)
+	conn.Write([]byte(reply))
 }
