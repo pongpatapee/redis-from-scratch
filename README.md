@@ -1,33 +1,24 @@
-[![progress-banner](https://backend.codecrafters.io/progress/redis/d6baf7da-a325-4220-8aa9-8b2a53dc1722)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# Redis from scratch
 
-This is a starting point for Go solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+This is part of CodeCrafter's challenges on rebuilding popular tools from scratch.
 
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
+## My progress
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+[![progress-banner](https://backend.codecrafters.io/progress/redis/d6baf7da-a325-4220-8aa9-8b2a53dc1722)](https://app.codecrafters.io/users/pongpatapee)
 
-# Passing the first stage
+## Other resources
 
-The entry point for your Redis implementation is in `app/server.go`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+Built initial parsers and handlers on my own, but needed a more robust and structured approach.
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
-```
+[building redis from scratch](https://www.build-redis-from-scratch.dev/en/introduction)
 
-That's all!
+## Concepts used
 
-# Stage 2 & beyond
+- TPC
+- Concurrency
 
-Note: This section is for stages 2 and beyond.
+  - Goroutines
+  - Timers
+  - Mutex locks
 
-1. Ensure you have `go (1.19)` installed locally
-1. Run `./your_program.sh` to run your Redis server, which is implemented in
-   `app/server.go`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+- Redis Serialization Protocal (RESP)
