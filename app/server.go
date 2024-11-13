@@ -37,21 +37,21 @@ func handleRequest(conn net.Conn) {
 
 	for {
 
-		buf := make([]byte, 1024)
+		resp := NewResp(conn)
 
-		length, err := conn.Read(buf)
-		if err == io.EOF {
-			return
-		} else if err != nil {
+		value, err := resp.Read()
+		if err != nil {
+			if err == io.EOF {
+				return
+			}
+
 			fmt.Println("Error while trying to read from connection", err.Error())
 			return
 		}
 
-		commandData := string(buf[:length])
-		args, _, err := ParseCommand(commandData)
-		if err != nil {
-			fmt.Println("Error while trying to parse command")
-			return
+		args := make([]string, len(value.array))
+		for i, v := range value.array {
+			args[i] = v.bulk
 		}
 
 		command := args[0]
