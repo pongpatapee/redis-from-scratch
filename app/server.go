@@ -49,20 +49,29 @@ func handleRequest(conn net.Conn) {
 			return
 		}
 
-		args := make([]string, len(value.array))
-		for i, v := range value.array {
-			args[i] = v.bulk
+		if value.typ != "array" {
+			fmt.Println("Invalid request, expected array")
+			continue
 		}
 
-		command := args[0]
+		if len(value.array) == 0 {
+			fmt.Println("Invalid request, expected array length > 0")
+			continue
+		}
+
+		command := strings.ToUpper(value.array[0].bulk)
 		fmt.Println("Hanlding command", strings.ToUpper(command))
 
+		args := value.array[1:]
+		writer := NewWriter(conn)
+
 		handler, ok := CommandHanlders[command]
-		if ok {
-			handler(conn, args[1:])
-		} else {
-			conn.Write([]byte("-ERR unknown command\r\n"))
+		if !ok {
+			fmt.Println("Invalid command: ", command)
+			writer.Write(Value{typ: "string", str: ""})
 		}
 
+		result := handler(args)
+		writer.Write(result)
 	}
 }
