@@ -4,29 +4,35 @@ import (
 	"sync"
 )
 
-type Store struct {
+type RedisStringDB struct {
 	store map[string]string
-	mu    sync.Mutex
+	mu    sync.RWMutex
 }
 
-func (s *Store) Set(key string, val string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.store[key] = val
+func NewRedisStringDB() *RedisStringDB {
+	return &RedisStringDB{store: make(map[string]string)}
 }
 
-func (s *Store) Del(key string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (db *RedisStringDB) Set(key string, val string) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
 
-	delete(s.store, key)
+	db.store[key] = val
 }
 
-func (s *Store) Get(key string) (string, bool) {
-	value, exist := s.store[key]
+func (db *RedisStringDB) Del(key string) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	delete(db.store, key)
+}
+
+func (db *RedisStringDB) Get(key string) (string, bool) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	value, exist := db.store[key]
 
 	return value, exist
 }
 
-var StringStore = Store{store: make(map[string]string)}
+var StringDB = NewRedisStringDB()

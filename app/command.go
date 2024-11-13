@@ -1,10 +1,16 @@
 package main
 
+import (
+	"strconv"
+	"strings"
+	"time"
+)
+
 var CommandHanlders = map[string]func([]Value) Value{
 	"PING": PingHanlder,
 	// "ECHO": EchoHandler,
-	// "SET":  SetHandler,
-	// "GET":  GetHandler,
+	"SET": SetHandler,
+	"GET": GetHandler,
 }
 
 func PingHanlder(args []Value) Value {
@@ -16,67 +22,61 @@ func PingHanlder(args []Value) Value {
 	return Value{typ: "string", str: args[0].bulk}
 }
 
-// func EchoHandler(args []Value) Value {
-// 	if len(args) != 1 {
-// 		conn.Write([]byte("-ERR wrong number of arguments for 'echo' command\r\n"))
-// 		return
-// 	}
+func EchoHandler(args []Value) Value {
+	if len(args) != 1 {
+		return Value{typ: "error", str: "ERR wrong number of arguments for 'echo' command"}
+	}
 
-// 	reply := fmt.Sprintf("+%v\r\n", args[0])
+	return Value{typ: "string", str: args[0].bulk}
+}
 
-// 	conn.Write([]byte(reply))
-// }
+func SetHandler(args []Value) Value {
+	if len(args) < 2 {
+		return Value{typ: "error", str: "ERR wrong number of arguments for 'set' command"}
+	}
 
-// func SetHandler(args []Value) Value {
-// 	if len(args) < 2 {
-// 		conn.Write([]byte("-ERR syntax error\r\n"))
-// 		return
-// 	}
+	// TODO: Handle arguments better
+	var opt string
+	if len(args) >= 3 {
+		opt = args[2].bulk
+	}
 
-// 	var opt string
-// 	if len(args) >= 3 {
-// 		opt = args[2]
-// 	}
+	key := args[0].bulk
+	value := args[1].bulk
 
-// 	key := args[0]
-// 	value := args[1]
+	StringDB.Set(key, value)
 
-// 	StringStore.Set(key, value)
+	if strings.ToUpper(opt) == "PX" {
+		if len(args) < 4 {
+			return Value{typ: "error", str: "ERR PX missing arg"}
+		}
 
-// 	if strings.ToUpper(opt) == "PX" {
-// 		if len(args) < 4 {
-// 			conn.Write([]byte("-ERR PX missing arg\r\n"))
-// 			return
-// 		}
+		length, _ := strconv.Atoi(args[3].bulk)
 
-// 		length, _ := strconv.Atoi(args[3])
+		timer := time.NewTimer(time.Duration(length) * time.Millisecond)
 
-// 		timer := time.NewTimer(time.Duration(length) * time.Millisecond)
+		go func() {
+			<-timer.C
+			StringDB.Del(key)
+		}()
 
-// 		go func() {
-// 			<-timer.C
-// 			StringStore.Del(key)
-// 		}()
+	}
 
-// 	}
+	return Value{typ: "string", str: "OK"}
+}
 
-// 	conn.Write([]byte("+OK\r\n"))
-// }
+func GetHandler(args []Value) Value {
+	if len(args) != 1 {
+		return Value{typ: "error", str: "ERR wrong number of arguments for 'get' command"}
+	}
 
-// func GetHandler(args []Value) Value {
-// 	if len(args) != 1 {
-// 		conn.Write([]byte("-ERR wrong number of arguments for 'get' command\r\n"))
-// 		return
-// 	}
+	key := args[0].bulk
 
-// 	key := args[0]
+	val, exist := StringDB.Get(key)
+	if !exist {
+		return Value{typ: "null"}
+	}
 
-// 	val, exist := StringStore.Get(key)
-// 	if !exist {
-// 		conn.Write([]byte("$-1\r\n"))
-// 		return
-// 	}
-
-// 	reply := fmt.Sprintf("$%v\r\n%v\r\n", len(string(val)), val)
-// 	conn.Write([]byte(reply))
-// }
+	// Marshaller automatically appends the length
+	return Value{typ: "bulk", bulk: val}
+}
