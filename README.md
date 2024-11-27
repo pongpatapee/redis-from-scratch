@@ -1,16 +1,8 @@
 # Redis from scratch
 
-This is part of CodeCrafter's challenges on rebuilding popular tools from scratch.
-
-## My progress
-
 [![progress-banner](https://backend.codecrafters.io/progress/redis/d6baf7da-a325-4220-8aa9-8b2a53dc1722)](https://app.codecrafters.io/users/pongpatapee)
 
-## Other resources
-
-Built initial parsers and handlers on my own, but needed a more robust and structured approach.
-
-[building redis from scratch](https://www.build-redis-from-scratch.dev/en/introduction)
+This is part of CodeCrafter's challenges on rebuilding popular tools from scratch.
 
 ## Concepts used
 
@@ -53,3 +45,50 @@ world\r\n
 
 Building the Redis server means that we are able to properly _parse_ commands in RESP,
 _execute_ these commands, and _respond_ back to the client in RESP.
+
+### Concurrency
+
+#### Original
+
+According to Redis (the company), Redis is mostly single threaded. This means that
+Redis is able to serve all requests from multiple clients using a single thread.
+They use a technique called **multiplexing**, which enables them to serve
+requests sequentially while not being slow (Similar to how Node.js is designed).
+
+They are still able to process requests extremely quickly despite, the single thread
+because Redis is designed to not block system calls, e.g., I/O to a socket.
+
+Although since Redis 2.4, they use _some_ threads in the background for slow I/O
+operation to disk, but is still serving requests through a single thread.
+
+#### For this project
+
+Since I'm building the server in Go, it makes sense to use one of Go's main feature -- Goroutines.
+
+Each server connection from the client, I am handling their requests through a goroutine.
+
+```go
+ for {
+  conn, err := listener.Accept() // blocking call
+  if err != nil {
+   fmt.Println("Error accepting connection: ", err.Error())
+   continue
+  }
+
+  go handleRequest(conn)
+ }
+```
+
+### Command parsing and Marshalling
+
+### Data storage
+
+#### In-memory storage
+
+#### Data persistence
+
+## Other resources
+
+Built initial parsers and handlers on my own, but needed a more robust and structured approach.
+So I followed the command parsing and marshalling from
+[this article](https://www.build-redis-from-scratch.dev/en/introduction).
